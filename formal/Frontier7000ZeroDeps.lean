@@ -160,12 +160,12 @@ theorem frontier7000_interval_gate_141746_and_kstar14_bounds :
     2 ^ 14084 ≤ 4096 * kstar14 ∧
     4096 * kstar14 < 2 ^ 14085 ∧
     4096 * kstar14 < 2 ^ H14 := by
-  have h1 : powBits 14174600000000000001 bits_2228 < powBits 2 bits_141746 := by decide
-  have h2 : powBits 2 bits_141745 ≤ powBits 14174500000000000001 bits_2228 := by decide
+  have h1 : powBits (H14 + 1) bits_2228 < powBits 2 bits_141746 := by decide
+  have h2 : powBits 2 bits_141745 ≤ powBits (H14 - step14 + 1) bits_2228 := by decide
   have hk_lo : powBits 2 bits_14084 ≤ 4096 * (1920 * powBits 153 bits_1920 * ((H14 + 1) ^ 2)) := by decide
   have hk_hi : 4096 * (1920 * powBits 153 bits_1920 * ((H14 + 1) ^ 2)) < powBits 2 bits_14085 := by decide
-  have eb1 : powBits 14174600000000000001 bits_2228 = (H14 + 1) ^ 2228 := powBits_eq_pow (H14 + 1) bits_2228
-  have eb2 : powBits 14174500000000000001 bits_2228 = (H14 - step14 + 1) ^ 2228 := powBits_eq_pow (H14 - step14 + 1) bits_2228
+  have eb1 : powBits (H14 + 1) bits_2228 = (H14 + 1) ^ 2228 := powBits_eq_pow (H14 + 1) bits_2228
+  have eb2 : powBits (H14 - step14 + 1) bits_2228 = (H14 - step14 + 1) ^ 2228 := powBits_eq_pow (H14 - step14 + 1) bits_2228
   have e46 : powBits 2 bits_141746 = 2 ^ 141746 := powBits_eq_pow 2 bits_141746
   have e45 : powBits 2 bits_141745 = 2 ^ 141745 := powBits_eq_pow 2 bits_141745
   have e153 : powBits 153 bits_1920 = 153 ^ 1920 := powBits_eq_pow 153 bits_1920
