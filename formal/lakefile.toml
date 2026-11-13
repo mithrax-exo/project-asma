@@ -1,5 +1,8 @@
 name = "asma_formal"
-defaultTargets = ["AsmaIdentifiabilityProofs"]
+defaultTargets = ["AsmaIdentifiabilityProofs", "Frontier7000ZeroDeps"]
 
 [[lean_lib]]
 name = "AsmaIdentifiabilityProofs"
+
+[[lean_lib]]
+name = "Frontier7000ZeroDeps"
