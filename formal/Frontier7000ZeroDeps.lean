@@ -11,6 +11,8 @@
 -/
 
 namespace KappaCheck.Frontier7000ZeroDeps
+set_option maxRecDepth 500000
+
 
 def kappaNum : Int := 363005817
 def kappaDen : Int := 100000000000
