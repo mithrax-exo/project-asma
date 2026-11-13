@@ -57,7 +57,7 @@ theorem rank_one_probe_det_zero (s1 s2 a b : Int) :
       (s1 * a) * (s2 * b) = s1 * (a * (s2 * b)) := Int.mul_assoc s1 a (s2 * b)
       _ = s1 * ((s2 * b) * a) := congrArg (fun t => s1 * t) (Int.mul_comm a (s2 * b))
       _ = s1 * (s2 * (b * a)) := congrArg (fun t => s1 * t) (Int.mul_assoc s2 b a)
-      _ = s1 * (s2 * (a * b)) := congrArg (fun t => s1 * t) (Int.mul_comm b a)
+      _ = s1 * (s2 * (a * b)) := congrArg (fun t => s1 * (s2 * t)) (Int.mul_comm b a)
       _ = s1 * ((a * b) * s2) := congrArg (fun t => s1 * t) (Int.mul_comm s2 (a * b))
       _ = s1 * (a * (b * s2)) := congrArg (fun t => s1 * t) (Int.mul_assoc a b s2)
       _ = s1 * ((b * s2) * a) := congrArg (fun t => s1 * t) (Int.mul_comm a (b * s2))
