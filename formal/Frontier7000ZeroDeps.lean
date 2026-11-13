@@ -5,7 +5,7 @@
   Zero-dependency stock Lean 4 (`Init`-only, compatible with v4.21.0 and v4.35.0)
   certificate checks for Frontier 7000 (`PR #7000` & `PR #7001`), Role 275 two-probe
   rank-one determinant obstructions (`PR #7493`), and exact `119,542`-bit / `141,746`-bit
-  cover-power and `kstar` bit-length inequalities via 18-step binary squaring (`powBits`).
+  cover-power and `kstar` bit-length inequalities via `powBits` binary squaring.
 
   Requires zero Mathlib imports and declares zero axioms.
 -/
@@ -102,11 +102,50 @@ theorem powBits_eq_pow (b : Nat) (bs : List Bool) : powBits b bs = b ^ (valBits 
       rw [ih]
       exact congrArg (fun t => t * b) (pow_add_nat b (valBits rest) (valBits rest))
 
+theorem powBits_eq_of_val (b e : Nat) (bs : List Bool) (h : valBits bs = e) :
+    powBits b bs = b ^ e :=
+  Eq.mp (congrArg (fun k => powBits b bs = b ^ k) h) (powBits_eq_pow b bs)
+
+theorem lt_pow_of_powBits (x y ex ey : Nat) (bx by_ : List Bool)
+    (hx : valBits bx = ex) (hy : valBits by_ = ey)
+    (hlt : powBits x bx < powBits y by_) : x ^ ex < y ^ ey := by
+  have ex1 := powBits_eq_of_val x ex bx hx
+  have ey1 := powBits_eq_of_val y ey by_ hy
+  have t1 := Eq.mp (congrArg (fun u => u < powBits y by_) ex1) hlt
+  exact Eq.mp (congrArg (fun v => x ^ ex < v) ey1) t1
+
+theorem le_pow_of_powBits (x y ex ey : Nat) (bx by_ : List Bool)
+    (hx : valBits bx = ex) (hy : valBits by_ = ey)
+    (hle : powBits x bx ≤ powBits y by_) : x ^ ex ≤ y ^ ey := by
+  have ex1 := powBits_eq_of_val x ex bx hx
+  have ey1 := powBits_eq_of_val y ey by_ hy
+  have t1 := Eq.mp (congrArg (fun u => u ≤ powBits y by_) ex1) hle
+  exact Eq.mp (congrArg (fun v => x ^ ex ≤ v) ey1) t1
+
 theorem pow2_mono {a b : Nat} (h : a ≤ b) : 2 ^ a ≤ 2 ^ b := by
   induction h with
   | refl => exact Nat.le_refl (2 ^ a)
   | @step m _ ih =>
     exact Nat.le_trans ih (Nat.le_add_left (2 ^ m) (0 + 2 ^ m))
+
+theorem kstar_bounds_of_powBits (H e153 elo ehi : Nat) (b153 blo bhi : List Bool)
+    (h153 : valBits b153 = e153) (hlo_v : valBits blo = elo) (hhi_v : valBits bhi = ehi)
+    (hlo : powBits 2 blo ≤ 4096 * (1920 * (powBits 153 b153) * ((H + 1) * (H + 1))))
+    (hhi : 4096 * (1920 * (powBits 153 b153) * ((H + 1) * (H + 1))) < powBits 2 bhi)
+    (hle : ehi ≤ H) :
+    2 ^ elo ≤ 4096 * (1920 * (153 ^ e153) * ((H + 1) * (H + 1))) ∧
+    4096 * (1920 * (153 ^ e153) * ((H + 1) * (H + 1))) < 2 ^ ehi ∧
+    4096 * (1920 * (153 ^ e153) * ((H + 1) * (H + 1))) < 2 ^ H := by
+  have p153 := powBits_eq_of_val 153 e153 b153 h153
+  have plo := powBits_eq_of_val 2 elo blo hlo_v
+  have phi := powBits_eq_of_val 2 ehi bhi hhi_v
+  have g1 : 2 ^ elo ≤ 4096 * (1920 * (153 ^ e153) * ((H + 1) * (H + 1))) := by
+    have t1 := Eq.mp (congrArg (fun u => u ≤ 4096 * (1920 * (powBits 153 b153) * ((H + 1) * (H + 1)))) plo) hlo
+    exact Eq.mp (congrArg (fun v => 2 ^ elo ≤ 4096 * (1920 * v * ((H + 1) * (H + 1)))) p153) t1
+  have g2 : 4096 * (1920 * (153 ^ e153) * ((H + 1) * (H + 1))) < 2 ^ ehi := by
+    have t2 := Eq.mp (congrArg (fun u => 4096 * (1920 * (powBits 153 b153) * ((H + 1) * (H + 1))) < u) phi) hhi
+    exact Eq.mp (congrArg (fun v => 4096 * (1920 * v * ((H + 1) * (H + 1))) < 2 ^ ehi) p153) t2
+  exact ⟨g1, g2, Nat.lt_of_lt_of_le g2 (pow2_mono hle)⟩
 
 def bits_2228 : List Bool := [false, false, true, false, true, true, false, true, false, false, false, true]
 def bits_1920 : List Bool := [false, false, false, false, false, false, false, true, true, true, true]
@@ -119,9 +158,9 @@ def bits_141745 : List Bool := [true, false, false, false, true, true, false, tr
 def bits_14084 : List Bool := [false, false, true, false, false, false, false, false, true, true, true, false, true, true]
 def bits_14085 : List Bool := [true, false, true, false, false, false, false, false, true, true, true, false, true, true]
 
-def H11 : Nat := 14174600000000000
-def step11 : Nat := 100000000000
-def kstar11 : Nat := 1920 * (153 ^ 1920) * ((H11 + 1) ^ 2)
+abbrev H11 : Nat := 14174600000000000
+abbrev step11 : Nat := 100000000000
+abbrev kstar11 : Nat := 1920 * (153 ^ 1920) * ((H11 + 1) * (H11 + 1))
 
 theorem frontier7000_cover_119542_and_kstar11_bounds :
     (H11 + 1) ^ 2228 < 2 ^ 119542 ∧
@@ -129,54 +168,24 @@ theorem frontier7000_cover_119542_and_kstar11_bounds :
     2 ^ 119541 ≤ (H11 - step11 + 1) ^ 2228 ∧
     2 ^ 14064 ≤ 4096 * kstar11 ∧
     4096 * kstar11 < 2 ^ 14065 ∧
-    4096 * kstar11 < 2 ^ H11 := by
-  have h1 : powBits 14174600000000001 bits_2228 < powBits 2 bits_119542 := by decide
-  have h2 : powBits 2 bits_119541 ≤ powBits 14174600000000001 bits_2228 := by decide
-  have h3 : powBits 2 bits_119541 ≤ powBits 14174500000000001 bits_2228 := by decide
-  have hk_lo : powBits 2 bits_14064 ≤ 4096 * (1920 * powBits 153 bits_1920 * ((H11 + 1) ^ 2)) := by decide
-  have hk_hi : 4096 * (1920 * powBits 153 bits_1920 * ((H11 + 1) ^ 2)) < powBits 2 bits_14065 := by decide
-  have eb1 : powBits 14174600000000001 bits_2228 = (H11 + 1) ^ 2228 := powBits_eq_pow (H11 + 1) bits_2228
-  have eb2 : powBits 14174500000000001 bits_2228 = (H11 - step11 + 1) ^ 2228 := powBits_eq_pow (H11 - step11 + 1) bits_2228
-  have e42 : powBits 2 bits_119542 = 2 ^ 119542 := powBits_eq_pow 2 bits_119542
-  have e41 : powBits 2 bits_119541 = 2 ^ 119541 := powBits_eq_pow 2 bits_119541
-  have e153 : powBits 153 bits_1920 = 153 ^ 1920 := powBits_eq_pow 153 bits_1920
-  have e64 : powBits 2 bits_14064 = 2 ^ 14064 := powBits_eq_pow 2 bits_14064
-  have e65 : powBits 2 bits_14065 = 2 ^ 14065 := powBits_eq_pow 2 bits_14065
-  rw [eb1, e42] at h1
-  rw [e41, eb1] at h2
-  rw [e41, eb2] at h3
-  rw [e64, e153] at hk_lo
-  rw [e153, e65] at hk_hi
-  have hle : 14065 ≤ H11 := by decide
-  exact ⟨h1, h2, h3, hk_lo, hk_hi, Nat.lt_of_lt_of_le hk_hi (pow2_mono hle)⟩
+    4096 * kstar11 < 2 ^ H11 :=
+  ⟨lt_pow_of_powBits (H11 + 1) 2 2228 119542 bits_2228 bits_119542 (by decide) (by decide) (by decide),
+   le_pow_of_powBits 2 (H11 + 1) 119541 2228 bits_119541 bits_2228 (by decide) (by decide) (by decide),
+   le_pow_of_powBits 2 (H11 - step11 + 1) 119541 2228 bits_119541 bits_2228 (by decide) (by decide) (by decide),
+   kstar_bounds_of_powBits H11 1920 14064 14065 bits_1920 bits_14064 bits_14065 (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)⟩
 
-def step14 : Nat := 100000000000000
-def H14 : Nat := 14174600000000000000
-def kstar14 : Nat := 1920 * (153 ^ 1920) * ((H14 + 1) ^ 2)
+abbrev step14 : Nat := 100000000000000
+abbrev H14 : Nat := 14174600000000000000
+abbrev kstar14 : Nat := 1920 * (153 ^ 1920) * ((H14 + 1) * (H14 + 1))
 
 theorem frontier7000_interval_gate_141746_and_kstar14_bounds :
     (H14 + 1) ^ 2228 < 2 ^ 141746 ∧
     2 ^ 141745 ≤ (H14 - step14 + 1) ^ 2228 ∧
     2 ^ 14084 ≤ 4096 * kstar14 ∧
     4096 * kstar14 < 2 ^ 14085 ∧
-    4096 * kstar14 < 2 ^ H14 := by
-  have h1 : powBits (H14 + 1) bits_2228 < powBits 2 bits_141746 := by decide
-  have h2 : powBits 2 bits_141745 ≤ powBits (H14 - step14 + 1) bits_2228 := by decide
-  have hk_lo : powBits 2 bits_14084 ≤ 4096 * (1920 * powBits 153 bits_1920 * ((H14 + 1) ^ 2)) := by decide
-  have hk_hi : 4096 * (1920 * powBits 153 bits_1920 * ((H14 + 1) ^ 2)) < powBits 2 bits_14085 := by decide
-  have eb1 : powBits (H14 + 1) bits_2228 = (H14 + 1) ^ 2228 := powBits_eq_pow (H14 + 1) bits_2228
-  have eb2 : powBits (H14 - step14 + 1) bits_2228 = (H14 - step14 + 1) ^ 2228 := powBits_eq_pow (H14 - step14 + 1) bits_2228
-  have e46 : powBits 2 bits_141746 = 2 ^ 141746 := powBits_eq_pow 2 bits_141746
-  have e45 : powBits 2 bits_141745 = 2 ^ 141745 := powBits_eq_pow 2 bits_141745
-  have e153 : powBits 153 bits_1920 = 153 ^ 1920 := powBits_eq_pow 153 bits_1920
-  have e84 : powBits 2 bits_14084 = 2 ^ 14084 := powBits_eq_pow 2 bits_14084
-  have e85 : powBits 2 bits_14085 = 2 ^ 14085 := powBits_eq_pow 2 bits_14085
-  rw [eb1, e46] at h1
-  rw [e45, eb2] at h2
-  rw [e84, e153] at hk_lo
-  rw [e153, e85] at hk_hi
-  have hle : 14085 ≤ H14 := by decide
-  exact ⟨h1, h2, hk_lo, hk_hi, Nat.lt_of_lt_of_le hk_hi (pow2_mono hle)⟩
+    4096 * kstar14 < 2 ^ H14 :=
+  ⟨lt_pow_of_powBits (H14 + 1) 2 2228 141746 bits_2228 bits_141746 (by decide) (by decide) (by decide),
+   le_pow_of_powBits 2 (H14 - step14 + 1) 141745 2228 bits_141745 bits_2228 (by decide) (by decide) (by decide),
+   kstar_bounds_of_powBits H14 1920 14084 14085 bits_1920 bits_14084 bits_14085 (by decide) (by decide) (by decide) (by decide) (by decide) (by decide)⟩
 
 end KappaCheck.Frontier7000ZeroDeps
-  
