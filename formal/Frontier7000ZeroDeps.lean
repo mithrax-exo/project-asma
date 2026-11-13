@@ -156,4 +156,5 @@ end KappaCheck.Frontier7000ZeroDeps
 #print axioms KappaCheck.Frontier7000ZeroDeps.role275_fixed_fusion_impossible
 #print axioms KappaCheck.Frontier7000ZeroDeps.pow2_add
 #print axioms KappaCheck.Frontier7000ZeroDeps.pow2_mono
-#print axioms KappaCheck.Frontier7000ZeroDeps.frontier7000_
+#print axioms KappaCheck.Frontier7000ZeroDeps.frontier7000_cover_119542_and_kstar11_bounds
+#print axioms KappaCheck.Frontier7000ZeroDeps.frontier7000_interval_gate_141746_and_kstar14_bounds
