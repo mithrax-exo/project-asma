@@ -18,7 +18,7 @@ def kappaDen : Int := 100000000000
 theorem frontier7000_kappa_hierarchy_and_supplier_margin :
     kappaNum * 32768 > 118 * kappaDen /\
     kappaNum * 32768 < 119 * kappaDen /\
-    kappaNum * 100000000 > 3125804 * kappaDen /\
+    kappaNum * 1000000000 > 3125804 * kappaDen /\
     385248 * 1000 - kappaNum = 22242183 /\
     (22242183 : Int) > 0 /\
     (826790496 : Int) < 1000000000 /\
@@ -60,16 +60,12 @@ theorem rank_one_probe_det_zero (s1 s2 a b : Int) :
 
 theorem rank_one_fusion_impossible
     (s1 s2 a b u1 u2 v1 v2 : Int)
-    (hdet : u1 * v2 - u2 * v1 != 0) :
+    (hdet : Not (u1 * v2 - u2 * v1 = 0)) :
     Not (u1 = s1 * a /\ u2 = s1 * b /\ v1 = s2 * a /\ v2 = s2 * b) := by
   intro h
-  have hu1 : u1 = s1 * a := h.1
-  have hu2 : u2 = s1 * b := h.2.1
-  have hv1 : v1 = s2 * a := h.2.2.1
-  have hv2 : v2 = s2 * b := h.2.2.2
-  rw [hu1, hu2, hv1, hv2] at hdet
-  rw [rank_one_probe_det_zero s1 s2 a b] at hdet
-  exact absurd hdet (by decide)
+  apply hdet
+  rw [h.1, h.2.1, h.2.2.1, h.2.2.2]
+  exact rank_one_probe_det_zero s1 s2 a b
 
 theorem role275_fixed_fusion_impossible (s1 s2 a b : Int) :
     Not ((2 : Int) = s1 * a /\ (-1 : Int) = s1 * b /\ (2 : Int) = s2 * a /\ (1 : Int) = s2 * b) :=
@@ -77,21 +73,19 @@ theorem role275_fixed_fusion_impossible (s1 s2 a b : Int) :
 
 theorem pow2_add (a b : Nat) : (2 ^ a) * (2 ^ b) = 2 ^ (a + b) := by
   induction b with
-  | zero => simp
+  | zero => exact (Nat.mul_one (2 ^ a)).symm
   | succ k ih =>
       calc
-        (2 ^ a) * (2 ^ (k + 1)) = (2 ^ a) * ((2 ^ k) * 2) := by rfl
+        (2 ^ a) * (2 ^ (k + 1)) = (2 ^ a) * ((2 ^ k) * 2) := rfl
         _ = ((2 ^ a) * (2 ^ k)) * 2 := (Nat.mul_assoc (2 ^ a) (2 ^ k) 2).symm
-        _ = (2 ^ (a + k)) * 2 := by rw [ih]
-        _ = 2 ^ (a + (k + 1)) := by rfl
+        _ = (2 ^ (a + k)) * 2 := congrArg (fun t => t * 2) ih
+        _ = 2 ^ (a + (k + 1)) := rfl
 
 theorem pow2_mono {a b : Nat} (h : a <= b) : 2 ^ a <= 2 ^ b := by
-  have hsum : a + (b - a) = b := Nat.add_sub_of_le h
-  have hpos : 0 < 2 ^ (b - a) := Nat.pow_pos (by decide)
-  have hmul : 2 ^ a <= (2 ^ a) * (2 ^ (b - a)) := Nat.le_mul_of_pos_right (2 ^ a) hpos
-  rw [pow2_add a (b - a), hsum] at hmul
-  exact hmul
-
+  induction h with
+  | refl => exact Nat.le_refl _
+  | @step m _ ih =>
+      exact Nat.le_trans ih (Nat.le_mul_of_pos_right (2 ^ m) (by decide : 0 < 2))
 def valBits : List Bool -> Nat
   | [] => 0
   | false :: bs => 2 * valBits bs
@@ -191,12 +185,13 @@ theorem kstar_bounds_of_powBits
       (Eq.mp (congrArg (fun t => 4096 * (1920 * powBits 153 bits_1920 * ((H + 1) ^ 2)) < t) hphi) h_hi)
   exact And.intro h1 h2
 
-def H11 : Nat := 141746000000000
+def H11 : Nat := 14174600000000000
 def step11 : Nat := 100000000000
 def kstar11 : Nat := 1920 * (153 ^ 1920) * ((H11 + 1) ^ 2)
 
 theorem frontier7000_cover_119542_and_kstar11_bounds :
     (H11 + 1) ^ 2228 < 2 ^ 119542 /\
+    2 ^ 119541 <= (H11 + 1) ^ 2228 /\
     2 ^ 119541 <= (H11 - step11 + 1) ^ 2228 /\
     2 ^ 14064 <= 4096 * kstar11 /\
     4096 * kstar11 < 2 ^ 14065 /\
@@ -204,7 +199,10 @@ theorem frontier7000_cover_119542_and_kstar11_bounds :
   have h1 : (H11 + 1) ^ 2228 < 2 ^ 119542 :=
     lt_pow_of_powBits (H11 + 1) bits_2228 2228 (by decide)
       2 bits_119542 119542 (by decide) (by decide)
-  have h2 : 2 ^ 119541 <= (H11 - step11 + 1) ^ 2228 :=
+  have h2a : 2 ^ 119541 <= (H11 + 1) ^ 2228 :=
+    le_pow_of_powBits 2 bits_119541 119541 (by decide)
+      (H11 + 1) bits_2228 2228 (by decide) (by decide)
+  have h2b : 2 ^ 119541 <= (H11 - step11 + 1) ^ 2228 :=
     le_pow_of_powBits 2 bits_119541 119541 (by decide)
       (H11 - step11 + 1) bits_2228 2228 (by decide) (by decide)
   have hk :
@@ -216,10 +214,10 @@ theorem frontier7000_cover_119542_and_kstar11_bounds :
       (by decide) (by decide) (by decide)
   have hlt : 4096 * kstar11 < 2 ^ H11 :=
     Nat.lt_of_lt_of_le hk.2 (pow2_mono (by decide : 14065 <= H11))
-  exact And.intro h1 (And.intro h2 (And.intro hk.1 (And.intro hk.2 hlt)))
+  exact And.intro h1 (And.intro h2a (And.intro h2b (And.intro hk.1 (And.intro hk.2 hlt))))
 
 def step14 : Nat := 100000000000000
-def H14 : Nat := 141746000000000000
+def H14 : Nat := 14174600000000000000
 def kstar14 : Nat := 1920 * (153 ^ 1920) * ((H14 + 1) ^ 2)
 
 theorem frontier7000_interval_gate_141746_and_kstar14_bounds :
